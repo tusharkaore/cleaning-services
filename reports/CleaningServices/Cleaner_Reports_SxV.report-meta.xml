@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Report xmlns="http://soap.sforce.com/2006/04/metadata">
+    <columns>
+        <aggregateTypes>Sum</aggregateTypes>
+        <field>ServiceResource$DueAmount__c</field>
+    </columns>
+    <columns>
+        <aggregateTypes>Sum</aggregateTypes>
+        <field>ServiceResource$TotalAmountPaid__c</field>
+    </columns>
+    <columns>
+        <field>ServiceResource.ServiceAppointments$Name</field>
+    </columns>
+    <columns>
+        <field>ServiceResource.ServiceAppointments$ServiceAppointment</field>
+    </columns>
+    <description>The amount due and paid and the number of jobs executed by each cleaner.</description>
+    <filter>
+        <criteriaItems>
+            <column>ServiceResource.ServiceAppointments$ServiceAppointment.Status</column>
+            <columnToColumn>false</columnToColumn>
+            <isUnlocked>true</isUnlocked>
+            <operator>equals</operator>
+            <value>Completed</value>
+        </criteriaItems>
+    </filter>
+    <format>Summary</format>
+    <groupingsDown>
+        <dateGranularity>Day</dateGranularity>
+        <field>ServiceResource$Name</field>
+        <sortOrder>Asc</sortOrder>
+    </groupingsDown>
+    <name>Cleaner Reports</name>
+    <params>
+        <name>co</name>
+        <value>1</value>
+    </params>
+    <reportType>Service_Resources_with_Assignments__c</reportType>
+    <scope>user</scope>
+    <showDetails>true</showDetails>
+    <showGrandTotal>true</showGrandTotal>
+    <showSubTotals>true</showSubTotals>
+    <timeFrameFilter>
+        <dateColumn>ServiceResource$CreatedDate</dateColumn>
+        <interval>INTERVAL_CUSTOM</interval>
+    </timeFrameFilter>
+</Report>

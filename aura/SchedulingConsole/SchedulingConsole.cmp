@@ -1,0 +1,79 @@
+<aura:component implements="force:appHostable" controller="SchedulingController">
+    
+    <!--Data attributes -->
+    <aura:attribute name="apptDetails" type="Object"/>
+    <aura:attribute name="resourceAssignment" type="Object"/>
+    
+    <!--Page filter attributes -->
+    <aura:attribute name="filters" type="Object"/>
+    
+    <aura:attribute name="spinner" type="Boolean" default="false" access="global"/>
+    
+    <lightning:navigation aura:id="navService"/>
+    <lightning:notificationsLibrary aura:id="notifLib" />
+    
+    <!--Full calendar scripts and CSS-->
+    <ltng:require scripts="{!join(',',
+                           $Resource.FullCalendarJS + '/jquery.min.js',
+                           $Resource.FullCalendarJS + '/moment.min.js',
+                           $Resource.FullCalendarJS + '/fullcalendar.min.js',
+                           $Resource.FullCalendarJS + '/scheduler.min.js'  
+                           )}"
+                  styles="{!join(',',
+                          $Resource.FullCalendarJS + '/fullcalendar.min.css',
+                          $Resource.FullCalendarJS + '/scheduler.min.css'
+                          )}"
+                  afterScriptsLoaded="{!c.afterScriptsLoaded}" />
+    
+    <div>
+        
+        <lightning:layout multipleRows="true">
+            <lightning:layoutItem class="slds-box"
+                                  size="4" smallDeviceSize="4" mediumDeviceSize="4" largeDeviceSize="4" padding="around-small">
+                
+                <!-- Status filter values -->
+                <lightning:select name="status" label="Status" aura:id="status" value="{!v.filters.status}">
+                    <aura:iteration items="{!v.filters.statusValues}" var="option">
+                        <option text="{!option.label}" value="{!option.value}"/>
+                    </aura:iteration>
+                </lightning:select>
+                
+                <lightning:layout multipleRows="true" class="slds-p-bottom_medium">
+                    
+                    <!-- Date filters -->
+                    <lightning:layoutItem size="6" class="slds-p-right_xxx-small">
+                        <lightning:input aura:id="field" type="date" name="StartDate"
+                                         label="Start Date" value="{!v.filters.startDate}" 
+                                         required="true" max="{!v.filters.endDate}" dateStyle="short"/>
+                    </lightning:layoutItem>
+                    
+                    <lightning:layoutItem size="6" class="slds-p-left_xxx-small">
+                        <lightning:input aura:id="field" type="date" name="EndDate"
+                                         label="End Date" value="{!v.filters.endDate}"
+                                         min="{!v.filters.startDate}" dateStyle="short"/>
+                    </lightning:layoutItem>
+                    
+                    <lightning:layoutItem size="12" class="slds-p-left_xxx-small slds-p-top_small">
+                        <div class="slds-text-align_center">
+                            <lightning:button variant="neutral" label="Apply Filters" 
+                                              onclick="{!c.applyFilters}"/>
+                        </div>
+                    </lightning:layoutItem>
+                    
+                    
+                </lightning:layout>
+                
+                <!-- Child Component to show the List of Appointments for scheduling -->
+                <c:AppointmentDetails apptDetails="{!v.apptDetails}" aura:id="apptDetails"/>
+            </lightning:layoutItem>
+
+            <!--Full calendar to show the resource allocation in timeline view-->
+            <lightning:layoutItem class="slds-box"
+                                  size="8" smallDeviceSize="8" mediumDeviceSize="8" largeDeviceSize="8" padding="around-small">
+                <div aura:id="calendar"></div>
+            </lightning:layoutItem>
+            
+        </lightning:layout>
+        
+    </div>
+</aura:component>

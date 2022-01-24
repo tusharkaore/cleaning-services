@@ -1,0 +1,202 @@
+<aura:component controller="SchedulingController">
+    
+    <!-- Data attributes -->
+    <aura:attribute name="apptDetails" type="Object"/>
+    <aura:attribute name="pageAppDetails" type="Object" />
+    <aura:attribute name="apptDetail" type="Object"/>
+    <aura:attribute name="resourceCandidateDetails" type="Object"/>
+    
+    <!-- Map attributes -->
+    <aura:attribute name="mapDetails" type="Object"/>
+    <aura:attribute name="openMap" type="Boolean" default="false"/>
+    
+    <!-- data table attributes -->
+    <aura:attribute name="columns" type="Object"/>
+    <aura:attribute name="selectedRows" type="Object"/>
+    
+    <!-- Store variables related to pagination  -->
+    <aura:attribute name="pagination" type="Object" />
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    <lightning:notificationsLibrary aura:id="notifLib" />
+    
+    <aura:method name="apptListChanged" action="{!c.apptListChanged}" access="public">
+        
+    </aura:method>
+
+    <div>
+        <div class="slds-text-heading_large slds-p-vertical_medium">Service Appointments</div>
+        
+        <aura:if isTrue="{!v.pageAppDetails.length>0}">
+            <aura:set attribute="else">
+                <div class="slds-text-color_destructive">
+                    No appointments matching the search criteria
+                </div>
+            </aura:set>
+            
+            <!-- Pagination Starts -->
+            <div >
+                <lightning:layout verticalAlign="center">
+                    
+                    <lightning:layoutItem  flexibility="auto" size="6">
+                        <div class="slds-float_left  ">
+                            Page {!(v.pagination.pageNumber)+' of
+                            '+(v.pagination.totalPages)} - ({!(v.pagination.currentNumberOfRecords)+' / '+(v.pagination.dataSize)} records)
+                        </div>
+                    </lightning:layoutItem>
+                    
+                    
+                    
+                    <lightning:layoutItem size="6" flexibility="auto, no-grow">
+                        <div class="btn ">
+                            <lightning:button variant="base" label="&gt;&gt;" class="slds-float_right"
+                                              disabled="{! v.pagination.pageNumber == v.pagination.totalPages}"
+                                              title="Last" onclick="{! c.handleLast }" name="Last" />
+                            
+                            <lightning:button variant="base" label="&gt;"
+                                              class="slds-float_right slds-p-right_small slds-p-left_small"
+                                              disabled="{! v.pagination.pageNumber == v.pagination.totalPages}"
+                                              title="Next" onclick="{! c.handleNext }" name="Next" />
+                            
+                            <lightning:button variant="base" label="&lt;"
+                                              class="slds-float_right slds-p-left_small slds-p-right_small"
+                                              title="Previous" onclick="{! c.handlePrev }"
+                                              disabled="{! v.pagination.pageNumber == 1}" name="Previous" />
+                            
+                            <lightning:button variant="base" label="&lt;&lt;" class="slds-float_right"
+                                              title="First" disabled="{! v.pagination.pageNumber == 1}"
+                                              onclick="{! c.handleFirst }" name="First"/>
+                        </div>
+                    </lightning:layoutItem>
+                </lightning:layout>
+            </div>
+            <!-- Pagination Ends-->
+            
+            <div class="slds-border_left slds-border_right"></div>
+
+            <aura:iteration items="{!v.pageAppDetails}" var="apptDetail" indexVar="index">
+                
+                <div class="slds-border_top">
+                    
+                    <div class="slds-p-horizontal_small slds-p-vertical_x-small slds-text-heading_small" data-apptid="{!apptDetail.Id}" onclick="{!c.onApptClick}"
+                         style="background-color: #f3f3f3;">
+                        {!apptDetail.WorkOrder__r.WorkOrderNumber} - {!apptDetail.Account.Name}
+                    </div>
+                    
+                    <div>
+                        
+                        <aura:if isTrue="{!apptDetail.isOpen}">
+                            
+                            <div class="slds-p-around_small" style="background-color: #d5dee7;">
+                                <lightning:layout multipleRows="true">
+                                    <lightning:layoutItem size="6" class="slds-p-around_xxx-small">
+                                        <b>Job Detail</b>
+                                        <p>
+                                            <lightning:formattedUrl value="{!'/' + apptDetail.WorkOrder__c}" tooltip="Appointment" label="{!apptDetail.WorkOrder__r.WorkOrderNumber}" target="_blank" />
+                                        </p>
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem size="6" class="slds-p-around_xxx-small">
+                                        <b>Job Date</b>
+                                        <p>
+                                            <lightning:formattedDateTime value="{!apptDetail.DueDate}"/>
+                                        </p>
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem size="12" class="slds-p-around_xxx-small">
+                                        <b>Address</b>
+                                        <p>{!apptDetail.Street}, {!apptDetail.City}, {!apptDetail.PostalCode}</p>
+                                    </lightning:layoutItem>
+                                    <lightning:layoutItem size="12" class="slds-p-around_xxx-small">
+                                        <b>Description</b>
+                                        <p>{!if(apptDetail.Description == null, 'NA', apptDetail.Description)}</p>
+                                        
+                                    </lightning:layoutItem>
+                                    
+                                    <!-- Candidate Details -->
+                                    <aura:if isTrue="{!apptDetail.showCandidates}">
+                                        <lightning:layoutItem size="12" class="slds-p-around_xxx-small">
+                                            <b>Available Resources</b>
+                                            
+                                            <aura:if isTrue="{!v.resourceCandidateDetails.length > 0}">
+                                                <lightning:datatable
+                                                                     columns="{!v.columns}"
+                                                                     data="{!v.resourceCandidateDetails}"
+                                                                     keyField="Id"
+                                                                     maxRowSelection="{!apptDetail.WorkOrder__r.CrewSize__c}"
+                                                                     onrowselection="{!c.handleResourceSelection}"/> 
+                                                
+                                                <aura:set attribute="else">
+                                                    <div class="slds-text-color_destructive">
+                                                        No Available Resource   
+                                                    </div>
+                                                </aura:set>
+                                            </aura:if>
+                                            
+                                        </lightning:layoutItem>
+                                    </aura:if>
+                                    <!-- Candidate Details Ends-->
+                                </lightning:layout>
+                                
+                                <!-- Action Buttons-->
+                                <div class="slds-text-align_center slds-p-top_small">
+                                    <lightning:buttonGroup>
+                                        <aura:if 
+                                                 isTrue="{!equals(apptDetail.Status,'New')}">
+                                            <lightning:button variant="neutral" label="Available Resources" 
+                                                              value="{!apptDetail.Id}" onclick="{!c.getCandidates}"/>
+                                        </aura:if>
+                                        
+                                        <aura:if isTrue="{!and(apptDetail.showCandidates, v.resourceCandidateDetails.length > 0)}">
+                                            <lightning:button variant="neutral" label="Schedule" 
+                                                              value="{!apptDetail.Id}" onclick="{!c.handleSaveResources}"/>
+                                        </aura:if>
+                                        
+                                        
+                                        <lightning:button variant="neutral" label="Show On Map" 
+                                                          value="{!apptDetail.Id}" onclick="{!c.handleShowMap}"/>
+                                    </lightning:buttonGroup>
+                                    
+                                </div>
+                            </div>
+                            
+                        </aura:if>
+                    </div>
+                </div>
+                
+            </aura:iteration>
+            <div class="slds-border_bottom"></div> 
+        </aura:if>
+        
+        <!-- Google Map Markup-->
+        <aura:if isTrue="{!v.openMap}">
+            <!--###### MODAL BOX Start######--> 
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <!-- ###### MODAL BOX HEADER Start ######-->
+                    <header class="slds-modal__header">
+                        <lightning:buttonIcon iconName="utility:close"
+                                              onclick="{! c.closeModal }"
+                                              alternativeText="close"
+                                              variant="bare-inverse"
+                                              class="slds-modal__close"/>
+                        <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">
+                            Map - <span>{!v.mapDetails.title}</span>
+                        </h2>
+                    </header>
+                    <!--###### MODAL BOX BODY Part Start######-->
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                        <div aura:id="gmap">
+                            <lightning:map mapMarkers="{!v.mapDetails.mapMarkers}"
+                                           center="{!v.mapDetails.mapCenter}"
+                                           zoomLevel="{!v.mapDetails.zoomLevel}"
+                                           markersTitle="{!v.mapDetails.markersTitle}"
+                                           showFooter="{!v.mapDetails.showFooter}" />
+                        </div>
+                    </div>
+                    
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+            <!--###### MODAL BOX Part END Here ######-->
+        </aura:if>
+    </div>
+</aura:component>
